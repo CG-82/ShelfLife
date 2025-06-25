@@ -1,10 +1,16 @@
 function Header () {
 
     return(
-        <header>
+        <Header>
+            
             <h1>Shelf Life</h1>
-        </header>
-    )
+           
+            <ul>
+                <li>Login</li>
+                <li>Logout</li>
+            </ul>
+        </Header>
+    );
 
 }
 
