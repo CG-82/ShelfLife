@@ -1,7 +1,7 @@
 function Header () {
 
     return(
-        <Header>
+        <header>
             
             <h1>Shelf Life</h1>
            
@@ -9,7 +9,7 @@ function Header () {
                 <li>Login</li>
                 <li>Logout</li>
             </ul>
-        </Header>
+        </header>
     );
 
 }

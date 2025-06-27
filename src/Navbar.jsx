@@ -4,11 +4,11 @@ function Navbar () {
 
         <nav>
 
-            <button>Home</button>
+            <button className="home-Button">Home</button>
 
-            <button>Collection</button>
+            <button className="collection-buton">Collection</button>
 
-            <button>Search</button>
+            <button className="search-button">Search</button>
 
         </nav>
     );
