@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Home from './Home.jsx';
 import Collection from './Collection.jsx';
 import Search from './Search.jsx';
@@ -29,16 +29,16 @@ function Content (){
 
     return (
         <>
-        <div>
+        <nav>
             <button className="home-button" onClick={showHome}>Home</button>
             <button className="collection-button" onClick={showCollection}>Collection</button>
             <button className="search-button" onClick={showSearch}>Search</button>
-        </div>
-        <div>
+        </nav>
+        <main>
             {homeActive && <Home />}
             {collectionActive && <Collection />}
             {searchActive && <Search />}
-        </div>
+        </main>
         </>
     );
 }
