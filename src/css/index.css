@@ -37,7 +37,7 @@ nav{
     background-color: #6f1d1bff;
     padding: 10px;
     display:flex;
-    justify-content: space-between;
+    justify-content: center;
     flex: 1;
     
     
@@ -46,7 +46,7 @@ nav{
 nav button{
     font-size: 1.2em;
     background-color: #ffe6a7ff;
-    width: 30%;
+    width: fit-content;
 }
 
 main {
@@ -64,4 +64,43 @@ footer {
     background-color: #432818ff;
     border: 10px solid #99582aff;
 }
+
+.search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    width: 220px;
+    background: #fffbe6;
+    box-shadow: 2px 2px 8px #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+}
+
+.add-library-btn {
+    margin-top: 10px;
+    background-color: #ffe6a7ff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.2s;
+}
+
+.add-library-btn:hover {
+    background-color: #ffd966;
+}
+
+
+  
+
+
 
