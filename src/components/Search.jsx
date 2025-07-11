@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLibrary } from '../context/LibraryContext';
 
 function Search() {
@@ -60,11 +60,11 @@ function Search() {
 
       <div className="search-results">
         {results.map(book => (
-          <div key={book.key}>
+          <div className="search-card"key={book.key}>
             <img src={getCoverURL(book.coverId)} alt={book.title} />
-            <div>{book.title}</div>
-            <div>by {book.author}</div>
-            <button onClick={() => addToLibrary(book)}>Add</button>
+            <div className='search-title'>{book.title}</div>
+            <div className='search-author'>by {book.author}</div>
+            <button className= "add-library-btn"onClick={() => addToLibrary(book)}>Add</button>
           </div>
         ))}
       </div>

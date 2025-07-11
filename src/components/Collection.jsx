@@ -9,26 +9,24 @@ function Collection() {
   const { library, removeFromLibrary } = useLibrary();
 
   return (
-    <div>
+    <div className='library'>
       <h2>Your Library</h2>
       {library.length === 0 ? (
         <p>Your library is empty.</p>
       ) : (
-        <ul>
+        <div className="library-cards-container">
           {library.map(book => (
-            <li key={book.key}>
+            <div className='library-card' key={book.key}>
               <img
                 src={getCoverURL(book.coverId)}
                 alt={book.title}
-                width="64"
-                height="96"
-                style={{ marginRight: '8px', verticalAlign: 'middle' }}
               />
-              {book.title} by {book.author}
-              <button onClick={() => removeFromLibrary(book.key)}>Remove</button>
-            </li>
+              <div className="library-title">{book.title}</div>
+              <div className="library-author">{book.author}</div>
+              <button className="remove-library-btn" onClick={() => removeFromLibrary(book.key)}>Remove</button>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
