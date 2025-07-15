@@ -6,19 +6,23 @@ function Search() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searched, setSearched] = useState(false);
 
   const { addToLibrary } = useLibrary();
 
-  const searchBooks = async () => {
-    if (!query.trim()) return;
+  const searchBooks = async (searchQuery = query, searchPage = page) => {
+    if (!searchQuery.trim()) return;
 
     setLoading(true);
     setError('');
     setResults([]);
+    setSearched(true);
 
     try {
       const response = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&page=${searchPage}`
       );
       const data = await response.json();
 
@@ -30,6 +34,7 @@ function Search() {
       }));
 
       setResults(books);
+      setTotalPages(Math.ceil(data.numFound / 100));
     } catch (err) {
       console.error('Search error:', err);
       setError('Something went wrong.');
@@ -43,6 +48,16 @@ function Search() {
       ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
       : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
+  const handleSearch = () => {
+    setPage(1);
+    searchBooks(query, 1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    searchBooks(query, newPage);
+  };
+
   return (
     <div>
       <h1>Book Search</h1>
@@ -51,23 +66,46 @@ function Search() {
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Enter book title or author"
+        onKeyDown={e => {
+          if (e.key === 'Enter') handleSearch();
+        }}
       />
-      <button onClick={searchBooks} disabled={loading}>
+      <button onClick={handleSearch} disabled={loading}>
         {loading ? 'Searching...' : 'Search'}
       </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div className="search-results">
-        {results.map(book => (
-          <div className="search-card"key={book.key}>
+        {searched && results.map(book => (
+          <div className="search-card" key={book.key}>
             <img src={getCoverURL(book.coverId)} alt={book.title} />
             <div className='search-title'>{book.title}</div>
             <div className='search-author'>by {book.author}</div>
-            <button className= "add-library-btn"onClick={() => addToLibrary(book)}>Add</button>
+            <button className="add-library-btn" onClick={() => addToLibrary(book)}>Add</button>
           </div>
         ))}
       </div>
+
+      {searched && results.length > 0 && (
+        <div className="pagination-controls">
+          <button
+            disabled={page === 1}
+            onClick={() => handlePageChange(Math.max(page - 1, 1))}
+          >
+            ◀ Prev
+          </button>
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            disabled={page === totalPages}
+            onClick={() => handlePageChange(Math.min(page + 1, totalPages))}
+          >
+            Next ▶
+          </button>
+        </div>
+      )}
     </div>
   );
 }
