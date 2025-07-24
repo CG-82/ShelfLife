@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useLibrary } from '../context/LibraryContext';
 
 function Search() {
@@ -9,25 +9,37 @@ function Search() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searched, setSearched] = useState(false);
+  const [summaries, setSummaries] = useState({});
+  const [summaryLoading, setSummaryLoading] = useState({});
+  const [addError, setAddError] = useState('');
+  const [openSummaries, setOpenSummaries] = useState({});
 
-  const { addToLibrary } = useLibrary();
+  const { addToLibrary, library } = useLibrary();
 
-  const searchBooks = async (searchQuery = query, searchPage = page) => {
-    if (!searchQuery.trim()) return;
-
+  const resetSearchState = () => {
     setLoading(true);
     setError('');
     setResults([]);
     setSearched(true);
+  };
+
+  const searchBooks = async (searchQuery = query, searchPage = page) => {
+    if (!searchQuery.trim()) return;
+
+    resetSearchState();
 
     try {
       const response = await fetch(
         `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&page=${searchPage}`
       );
+
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
       const data = await response.json();
 
-      const books = data.docs.slice(0, 10).map(book => ({
+      const books = data.docs.slice(0, 12).map(book => ({
         key: book.key,
+        workKey: book.key.split('/').pop(),
         title: book.title,
         author: book.author_name?.join(', ') || 'Unknown Author',
         coverId: book.cover_i,
@@ -36,8 +48,9 @@ function Search() {
       setResults(books);
       setTotalPages(Math.ceil(data.numFound / 100));
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
       console.error('Search error:', err);
-      setError('Something went wrong.');
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -48,50 +61,122 @@ function Search() {
       ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
       : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
-  const handleSearch = () => {
+  const fetchSummary = async (workKey) => {
+    setSummaryLoading(prev => ({ ...prev, [workKey]: true }));
+
+    try {
+      const response = await fetch(`https://openlibrary.org/works/${workKey}.json`);
+      const data = await response.json();
+      const summaryText =
+        typeof data.description === 'string'
+          ? data.description
+          : data.description?.value || 'No summary available.';
+
+      setSummaries(prev => ({ ...prev, [workKey]: summaryText }));
+    } catch (err) {
+      setSummaries(prev => ({ ...prev, [workKey]: 'Failed to load summary.' }));
+    } finally {
+      setSummaryLoading(prev => ({ ...prev, [workKey]: false }));
+    }
+  };
+
+  const toggleSummary = async (workKey) => {
+    const isOpen = openSummaries[workKey];
+    setOpenSummaries(prev => ({ ...prev, [workKey]: !isOpen }));
+    if (!isOpen && !summaries[workKey]) await fetchSummary(workKey);
+  };
+
+  const handleSearch = useCallback(() => {
     setPage(1);
     searchBooks(query, 1);
-  };
+  }, [query]);
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = useCallback((newPage) => {
     setPage(newPage);
     searchBooks(query, newPage);
-  };
+  }, [query]);
+
+  const handleAddToLibrary = useCallback((book) => {
+    setAddError('');
+    const exists = library.some(b => b.key === book.key);
+    if (exists) {
+      setAddError('This book is already in your library.');
+    } else {
+      addToLibrary(book);
+      setAddError('');
+    }
+  }, [library, addToLibrary]);
 
   return (
-    <div>
-      <h1>Book Search</h1>
-      <input
-        type="text"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Enter book title or author"
-        onKeyDown={e => {
-          if (e.key === 'Enter') handleSearch();
+    <section aria-labelledby="search-heading">
+      <h1 id="search-heading">Book Search</h1>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          handleSearch();
         }}
-      />
-      <button onClick={handleSearch} disabled={loading}>
-        {loading ? 'Searching...' : 'Search'}
-      </button>
+        role="search"
+        aria-label="Book search form"
+      >
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Enter book title or author"
+          aria-label="Search books"
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Searching...' : 'Search'}
+        </button>
+      </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      {addError && <p style={{ color: 'red' }}>{addError}</p>}
 
-      <div className="search-results">
-        {searched && results.map(book => (
-          <div className="search-card" key={book.key}>
-            <img src={getCoverURL(book.coverId)} alt={book.title} />
-            <div className='search-title'>{book.title}</div>
-            <div className='search-author'>by {book.author}</div>
-            <button className="add-library-btn" onClick={() => addToLibrary(book)}>Add</button>
-          </div>
-        ))}
-      </div>
+      <section aria-live="polite" aria-label="Search results">
+        <div className="search-results">
+          {searched && results.length === 0 && !loading && (
+            <p>No books found. Try a different search term.</p>
+          )}
+
+          {searched && results.map(book => {
+            const isInLibrary = library.some(b => b.key === book.key);
+            const isOpen = openSummaries[book.workKey];
+
+            return (
+              <article className="search-card" key={book.key}>
+                <img src={getCoverURL(book.coverId)} alt={book.title} />
+                <div className='search-title'>{book.title}</div>
+                <div className='search-author'>by {book.author}</div>
+                <button
+                  className="add-library-btn"
+                  onClick={() => handleAddToLibrary(book)}
+                  disabled={isInLibrary}
+                >
+                  {isInLibrary ? 'Added' : 'Add'}
+                </button>
+                <button
+                  className="summary-btn"
+                  onClick={() => toggleSummary(book.workKey)}
+                  disabled={summaryLoading[book.workKey]}
+                >
+                  {summaryLoading[book.workKey] ? 'Loading Summary...' : isOpen ? 'Hide Summary' : 'Show Summary'}
+                </button>
+                {isOpen && summaries[book.workKey] && (
+                  <p className="summary-text">{summaries[book.workKey]}</p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       {searched && results.length > 0 && (
-        <div className="pagination-controls">
+        <nav className="pagination-controls" aria-label="Pagination">
           <button
             disabled={page === 1}
             onClick={() => handlePageChange(Math.max(page - 1, 1))}
+            aria-label="Previous page"
           >
             ◀ Prev
           </button>
@@ -101,12 +186,13 @@ function Search() {
           <button
             disabled={page === totalPages}
             onClick={() => handlePageChange(Math.min(page + 1, totalPages))}
+            aria-label="Next page"
           >
             Next ▶
           </button>
-        </div>
+        </nav>
       )}
-    </div>
+    </section>
   );
 }
 

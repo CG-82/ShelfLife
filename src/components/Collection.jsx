@@ -22,8 +22,14 @@ function Collection() {
                 alt={book.title}
               />
               <div className="library-title">{book.title}</div>
-              <div className="library-author">{book.author}</div>
-              <button className="remove-library-btn" onClick={() => removeFromLibrary(book.key)}>Remove</button>
+              <div className="library-author">by {book.author}</div>
+
+              <button
+                className="remove-library-btn"
+                onClick={() => removeFromLibrary(book.key)}
+              >
+                Remove
+              </button>
             </div>
           ))}
         </div>

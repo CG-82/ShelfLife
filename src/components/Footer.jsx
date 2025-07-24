@@ -5,7 +5,7 @@ function Footer () {
         <footer>
 
         <a href="placeholder">About</a>
-        <p>Authored by Christopher Gullett</p>
+        
 
         </footer>
     );
