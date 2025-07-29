@@ -1,40 +1,89 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
-// Create a context for the library
 const LibraryContext = createContext();
-
-// Custom hook to use the LibraryContext
 export const useLibrary = () => useContext(LibraryContext);
 
-// Provider component to wrap around parts of the app that need access to the library
 export const LibraryProvider = ({ children }) => {
-  // Initialize library state from localStorage, or as an empty array if not present
   const [library, setLibrary] = useState(() => {
-    const saved = localStorage.getItem('myLibrary');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('myLibrary');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Failed to parse library from localStorage:', e);
+      return [];
+    }
   });
 
-  // Whenever the library changes, save it to localStorage
+  const [summaries, setSummaries] = useState({});
+  const [summaryLoading, setSummaryLoading] = useState({});
+  const [openSummaries, setOpenSummaries] = useState({});
+
   useEffect(() => {
     localStorage.setItem('myLibrary', JSON.stringify(library));
   }, [library]);
 
-  // Add a book to the library if it doesn't already exist
-  const addToLibrary = (book) => {
+  const fetchSummary = useCallback(async (workKey) => {
+    setSummaryLoading(prev => ({ ...prev, [workKey]: true }));
+    try {
+      const response = await fetch(`https://openlibrary.org/works/${workKey}.json`);
+      const data = await response.json();
+      const summaryText =
+        typeof data.description === 'string'
+          ? data.description
+          : data.description?.value || 'No summary available.';
+
+      setSummaries(prev => ({ ...prev, [workKey]: summaryText }));
+    } catch {
+      setSummaries(prev => ({ ...prev, [workKey]: 'Failed to load summary.' }));
+    } finally {
+      setSummaryLoading(prev => ({ ...prev, [workKey]: false }));
+    }
+  }, []);
+
+  const addToLibrary = useCallback((book) => {
     setLibrary(prev => {
       const exists = prev.some(b => b.key === book.key);
-      return exists ? prev : [...prev, book];
+      if (!exists) {
+        // Fetch summary as soon as book is added
+        fetchSummary(book.workKey);
+        return [...prev, book];
+      }
+      return prev;
     });
-  };
+  }, [fetchSummary]);
 
-  // Remove a book from the library by its key
-  const removeFromLibrary = (key) => {
+  const removeFromLibrary = useCallback((key) => {
     setLibrary(prev => prev.filter(book => book.key !== key));
-  };
+    setOpenSummaries(prev => {
+      const updated = { ...prev };
+      delete updated[key];
+      return updated;
+    });
+  }, []);
 
-  // Provide the library state and functions to children components
+  const toggleSummary = useCallback((workKey) => {
+    setOpenSummaries(prev => {
+      const isOpen = !!prev[workKey];
+      // If opening and no summary exists, fetch it
+      if (!isOpen && !summaries[workKey]) {
+        fetchSummary(workKey);
+      }
+      return { ...prev, [workKey]: !isOpen };
+    });
+  }, [summaries, fetchSummary]);
+
+  const value = useMemo(() => ({
+    library,
+    addToLibrary,
+    removeFromLibrary,
+    summaries,
+    summaryLoading,
+    openSummaries,
+    toggleSummary
+  }), [library, summaries, summaryLoading, openSummaries, addToLibrary, removeFromLibrary, toggleSummary]);
+
   return (
-    <LibraryContext.Provider value={{ library, addToLibrary, removeFromLibrary }}>
+    <LibraryContext.Provider value={value}>
       {children}
     </LibraryContext.Provider>
   );
