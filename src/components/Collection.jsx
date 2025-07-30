@@ -6,7 +6,14 @@ const getCoverURL = (coverId) =>
     : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
 function Collection() {
-  const { library, removeFromLibrary } = useLibrary();
+  const { 
+    library, 
+    removeFromLibrary, 
+    summaries, 
+    summaryLoading, 
+    openSummaries, 
+    toggleSummary 
+  } = useLibrary();
 
   return (
     <div className='library'>
@@ -15,23 +22,43 @@ function Collection() {
         <p>Your library is empty.</p>
       ) : (
         <div className="library-cards-container">
-          {library.map(book => (
-            <div className='library-card' key={book.key}>
-              <img
-                src={getCoverURL(book.coverId)}
-                alt={book.title}
-              />
-              <div className="library-title">{book.title}</div>
-              <div className="library-author">by {book.author}</div>
+          {library.map(book => {
+            const isOpen = openSummaries[book.workKey];
 
-              <button
-                className="remove-library-btn"
-                onClick={() => removeFromLibrary(book.key)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+            return (
+              <div className='library-card' key={book.key}>
+                <img
+                  src={getCoverURL(book.coverId)}
+                  alt={book.title}
+                />
+                <div className="library-title">{book.title}</div>
+                <div className="library-author">by {book.author}</div>
+
+                <button
+                  className="remove-library-btn"
+                  onClick={() => removeFromLibrary(book.key)}
+                >
+                  Remove
+                </button>
+
+                <button
+                  className="summary-btn"
+                  onClick={() => toggleSummary(book.workKey)}
+                  disabled={summaryLoading[book.workKey]}
+                >
+                  {summaryLoading[book.workKey]
+                    ? 'Loading Summary...'
+                    : isOpen
+                    ? 'Hide Summary'
+                    : 'Show Summary'}
+                </button>
+
+                {isOpen && summaries[book.workKey] && (
+                  <p className="summary-text">{summaries[book.workKey]}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

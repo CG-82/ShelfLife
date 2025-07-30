@@ -9,13 +9,19 @@ function Search() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searched, setSearched] = useState(false);
-  const [summaries, setSummaries] = useState({});
-  const [summaryLoading, setSummaryLoading] = useState({});
   const [addError, setAddError] = useState('');
-  const [openSummaries, setOpenSummaries] = useState({});
 
-  const { addToLibrary, library } = useLibrary();
+  // ✅ Pull everything from LibraryContext
+  const { 
+    library, 
+    addToLibrary,
+    summaries,
+    summaryLoading,
+    openSummaries,
+    toggleSummary
+  } = useLibrary();
 
+  // Reset state when a new search starts
   const resetSearchState = () => {
     setLoading(true);
     setError('');
@@ -23,6 +29,7 @@ function Search() {
     setSearched(true);
   };
 
+  // Fetch books from OpenLibrary
   const searchBooks = async (searchQuery = query, searchPage = page) => {
     if (!searchQuery.trim()) return;
 
@@ -61,31 +68,6 @@ function Search() {
       ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
       : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
-  const fetchSummary = async (workKey) => {
-    setSummaryLoading(prev => ({ ...prev, [workKey]: true }));
-
-    try {
-      const response = await fetch(`https://openlibrary.org/works/${workKey}.json`);
-      const data = await response.json();
-      const summaryText =
-        typeof data.description === 'string'
-          ? data.description
-          : data.description?.value || 'No summary available.';
-
-      setSummaries(prev => ({ ...prev, [workKey]: summaryText }));
-    } catch (err) {
-      setSummaries(prev => ({ ...prev, [workKey]: 'Failed to load summary.' }));
-    } finally {
-      setSummaryLoading(prev => ({ ...prev, [workKey]: false }));
-    }
-  };
-
-  const toggleSummary = async (workKey) => {
-    const isOpen = openSummaries[workKey];
-    setOpenSummaries(prev => ({ ...prev, [workKey]: !isOpen }));
-    if (!isOpen && !summaries[workKey]) await fetchSummary(workKey);
-  };
-
   const handleSearch = useCallback(() => {
     setPage(1);
     searchBooks(query, 1);
@@ -101,6 +83,7 @@ function Search() {
     const exists = library.some(b => b.key === book.key);
     if (exists) {
       setAddError('This book is already in your library.');
+      setTimeout(() => setAddError(''), 3000); // auto-clear after 3s
     } else {
       addToLibrary(book);
       setAddError('');
@@ -148,6 +131,7 @@ function Search() {
                 <img src={getCoverURL(book.coverId)} alt={book.title} />
                 <div className='search-title'>{book.title}</div>
                 <div className='search-author'>by {book.author}</div>
+                
                 <button
                   className="add-library-btn"
                   onClick={() => handleAddToLibrary(book)}
@@ -155,13 +139,19 @@ function Search() {
                 >
                   {isInLibrary ? 'Added' : 'Add'}
                 </button>
+
                 <button
                   className="summary-btn"
                   onClick={() => toggleSummary(book.workKey)}
                   disabled={summaryLoading[book.workKey]}
                 >
-                  {summaryLoading[book.workKey] ? 'Loading Summary...' : isOpen ? 'Hide Summary' : 'Show Summary'}
+                  {summaryLoading[book.workKey]
+                    ? 'Loading Summary...'
+                    : isOpen
+                    ? 'Hide Summary'
+                    : 'Show Summary'}
                 </button>
+
                 {isOpen && summaries[book.workKey] && (
                   <p className="summary-text">{summaries[book.workKey]}</p>
                 )}

@@ -4,6 +4,7 @@ const LibraryContext = createContext();
 export const useLibrary = () => useContext(LibraryContext);
 
 export const LibraryProvider = ({ children }) => {
+  // Library books
   const [library, setLibrary] = useState(() => {
     try {
       const saved = localStorage.getItem('myLibrary');
@@ -14,14 +15,40 @@ export const LibraryProvider = ({ children }) => {
     }
   });
 
-  const [summaries, setSummaries] = useState({});
-  const [summaryLoading, setSummaryLoading] = useState({});
-  const [openSummaries, setOpenSummaries] = useState({});
+  // Persist summaries and UI state
+  const [summaries, setSummaries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('librarySummaries');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
+  const [summaryLoading, setSummaryLoading] = useState({});
+  const [openSummaries, setOpenSummaries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('libraryOpenSummaries');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('myLibrary', JSON.stringify(library));
   }, [library]);
 
+  useEffect(() => {
+    localStorage.setItem('librarySummaries', JSON.stringify(summaries));
+  }, [summaries]);
+
+  useEffect(() => {
+    localStorage.setItem('libraryOpenSummaries', JSON.stringify(openSummaries));
+  }, [openSummaries]);
+
+  // Fetch summary if not loaded
   const fetchSummary = useCallback(async (workKey) => {
     setSummaryLoading(prev => ({ ...prev, [workKey]: true }));
     try {
@@ -40,31 +67,59 @@ export const LibraryProvider = ({ children }) => {
     }
   }, []);
 
+  // Add book to library and auto-fetch summary
   const addToLibrary = useCallback((book) => {
     setLibrary(prev => {
       const exists = prev.some(b => b.key === book.key);
       if (!exists) {
-        // Fetch summary as soon as book is added
-        fetchSummary(book.workKey);
+        // Fetch summary on first add if not already cached
+        if (!summaries[book.workKey]) fetchSummary(book.workKey);
         return [...prev, book];
       }
       return prev;
     });
-  }, [fetchSummary]);
+  }, [summaries, fetchSummary]);
 
+  // Remove a book and cleanup its summary and open state
   const removeFromLibrary = useCallback((key) => {
+    const removedBook = library.find(book => book.key === key);
     setLibrary(prev => prev.filter(book => book.key !== key));
-    setOpenSummaries(prev => {
-      const updated = { ...prev };
-      delete updated[key];
-      return updated;
-    });
-  }, []);
 
+    if (removedBook) {
+      const workKey = removedBook.workKey;
+
+      // Remove its summary and open state from memory
+      setSummaries(prev => {
+        const updated = { ...prev };
+        delete updated[workKey];
+        return updated;
+      });
+
+      setOpenSummaries(prev => {
+        const updated = { ...prev };
+        delete updated[workKey];
+        return updated;
+      });
+
+      setSummaryLoading(prev => {
+        const updated = { ...prev };
+        delete updated[workKey];
+        return updated;
+      });
+
+      // Update localStorage immediately
+      setTimeout(() => {
+        localStorage.setItem('librarySummaries', JSON.stringify(summaries));
+        localStorage.setItem('libraryOpenSummaries', JSON.stringify(openSummaries));
+      }, 0);
+    }
+  }, [library, summaries, openSummaries]);
+
+  // Toggle summary display
   const toggleSummary = useCallback((workKey) => {
     setOpenSummaries(prev => {
       const isOpen = !!prev[workKey];
-      // If opening and no summary exists, fetch it
+      // Fetch if opening and not loaded yet
       if (!isOpen && !summaries[workKey]) {
         fetchSummary(workKey);
       }
@@ -80,7 +135,10 @@ export const LibraryProvider = ({ children }) => {
     summaryLoading,
     openSummaries,
     toggleSummary
-  }), [library, summaries, summaryLoading, openSummaries, addToLibrary, removeFromLibrary, toggleSummary]);
+  }), [
+    library, summaries, summaryLoading, openSummaries,
+    addToLibrary, removeFromLibrary, toggleSummary
+  ]);
 
   return (
     <LibraryContext.Provider value={value}>
