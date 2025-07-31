@@ -4,7 +4,7 @@ const LibraryContext = createContext();
 export const useLibrary = () => useContext(LibraryContext);
 
 export const LibraryProvider = ({ children }) => {
-  // Library books
+  // Library books with status and rating
   const [library, setLibrary] = useState(() => {
     try {
       const saved = localStorage.getItem('myLibrary');
@@ -15,7 +15,7 @@ export const LibraryProvider = ({ children }) => {
     }
   });
 
-  // Persist summaries and UI state
+  //  Persist summaries and UI state
   const [summaries, setSummaries] = useState(() => {
     try {
       const saved = localStorage.getItem('librarySummaries');
@@ -67,14 +67,14 @@ export const LibraryProvider = ({ children }) => {
     }
   }, []);
 
-  // Add book to library and auto-fetch summary
+  // Add book to library with default status and rating
   const addToLibrary = useCallback((book) => {
     setLibrary(prev => {
       const exists = prev.some(b => b.key === book.key);
       if (!exists) {
-        // Fetch summary on first add if not already cached
+        const newBook = { ...book, status: 'owned', rating: 0 };
         if (!summaries[book.workKey]) fetchSummary(book.workKey);
-        return [...prev, book];
+        return [...prev, newBook];
       }
       return prev;
     });
@@ -107,7 +107,7 @@ export const LibraryProvider = ({ children }) => {
         return updated;
       });
 
-      // Update localStorage immediately
+      // Update localStorage cleanup
       setTimeout(() => {
         localStorage.setItem('librarySummaries', JSON.stringify(summaries));
         localStorage.setItem('libraryOpenSummaries', JSON.stringify(openSummaries));
@@ -127,17 +127,35 @@ export const LibraryProvider = ({ children }) => {
     });
   }, [summaries, fetchSummary]);
 
+  //  Update book status
+  const updateBookStatus = useCallback((key, newStatus) => {
+    setLibrary(prev => prev.map(book =>
+      book.key === key ? { ...book, status: newStatus } : book
+    ));
+  }, []);
+
+  //  Update book rating (1–5)
+  const updateBookRating = useCallback((key, newRating) => {
+    setLibrary(prev => prev.map(book =>
+      book.key === key ? { ...book, rating: newRating } : book
+    ));
+  }, []);
+
   const value = useMemo(() => ({
     library,
     addToLibrary,
     removeFromLibrary,
+    updateBookStatus,
+    updateBookRating,
     summaries,
     summaryLoading,
     openSummaries,
     toggleSummary
   }), [
     library, summaries, summaryLoading, openSummaries,
-    addToLibrary, removeFromLibrary, toggleSummary
+    addToLibrary, removeFromLibrary,
+    updateBookStatus, updateBookRating,
+    toggleSummary
   ]);
 
   return (
