@@ -11,7 +11,7 @@ function Search() {
   const [searched, setSearched] = useState(false);
   const [addError, setAddError] = useState('');
 
-  // ✅ Pull everything from LibraryContext
+  //  Pull everything from LibraryContext
   const { 
     library, 
     addToLibrary,
@@ -108,7 +108,7 @@ function Search() {
           placeholder="Enter book title or author"
           aria-label="Search books"
         />
-        <button type="submit" disabled={loading}>
+        <button className="search-api-btn" type="submit" disabled={loading}>
           {loading ? 'Searching...' : 'Search'}
         </button>
       </form>

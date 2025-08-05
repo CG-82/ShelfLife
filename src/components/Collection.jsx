@@ -1,7 +1,8 @@
 import { useLibrary } from '../context/LibraryContext';
 import {
   PieChart, Pie, Cell, Tooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  ResponsiveContainer
 } from 'recharts';
 
 const getCoverURL = (coverId) =>
@@ -21,7 +22,7 @@ function Collection() {
     summaryLoading
   } = useLibrary();
 
-  // --- Chart Data ---
+  // Chart Data
   const finishedCount = library.filter(b => b.status === 'finished').length;
   const unfinishedCount = library.length - finishedCount;
 
@@ -39,13 +40,13 @@ function Collection() {
 
   return (
     <div className='library'>
-      
+      <h2>Library Status charts</h2>
 
-      {/* --- LIBRARY STATS CHARTS --- */}
+      {/* Library Charts */}
       {library.length > 0 && (
-        <div className="library-stats" style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-          {/* Pie Chart: Finished vs Unfinished */}
-          <div>
+        <div className="library-stats">
+          {/* Pie Chart */}
+          <div className="library-chart">
             <h3>Books Finished vs Unfinished</h3>
             <PieChart width={300} height={300}>
               <Pie
@@ -67,10 +68,11 @@ function Collection() {
             </PieChart>
           </div>
 
-          {/* Bar Chart: Ratings */}
-          <div>
+          {/* Bar Chart */}
+          <div className="library-chart">
             <h3>Books by Rating</h3>
-            <BarChart width={400} height={300} data={ratingCounts}>
+            
+            <BarChart width={300} height={300} data={ratingCounts}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="rating" />
               <YAxis allowDecimals={false} />
@@ -78,12 +80,12 @@ function Collection() {
               <Legend />
               <Bar dataKey="count" fill="#2196f3" />
             </BarChart>
+           
           </div>
         </div>
       )}
-
-      {/* --- LIBRARY BOOK CARDS --- */}
       <h2>Your Library</h2>
+      {/* Library Cards*/}
       {library.length === 0 ? (
         <p>Your library is empty.</p>
       ) : (
@@ -99,7 +101,7 @@ function Collection() {
                 <div className="library-title">{book.title}</div>
                 <div className="library-author">by {book.author}</div>
 
-                {/* --- STATUS DROPDOWN --- */}
+                {/* Book Status Dropdown */}
                 <label>
                   Status:
                   <select
@@ -112,16 +114,12 @@ function Collection() {
                   </select>
                 </label>
 
-                {/* --- RATING STARS --- */}
-                <div className="rating" style={{ fontSize: '1.2rem', margin: '0.5rem 0' }}>
+                {/* Rating Stars */}
+                <div className="rating">
                   {[1, 2, 3, 4, 5].map(star => (
                     <span
                       key={star}
-                      style={{
-                        cursor: 'pointer',
-                        color: star <= (book.rating || 0) ? 'gold' : 'gray',
-                        marginRight: '3px'
-                      }}
+                      className={`star ${star <= (book.rating || 0) ? 'active' : ''}`}
                       onClick={() => updateBookRating(book.key, star)}
                     >
                       ★
@@ -129,7 +127,7 @@ function Collection() {
                   ))}
                 </div>
 
-                {/* --- SUMMARY TOGGLE BUTTON --- */}
+                {/* Summary Button */}
                 <button
                   className="summary-btn"
                   onClick={() => toggleSummary(book.workKey)}
@@ -146,7 +144,7 @@ function Collection() {
                   <p className="summary-text">{summaries[book.workKey]}</p>
                 )}
 
-                {/* --- REMOVE BUTTON --- */}
+                {/* Remove Button */}
                 <button
                   className="remove-library-btn"
                   onClick={() => removeFromLibrary(book.key)}
