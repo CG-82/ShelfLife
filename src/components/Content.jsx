@@ -34,7 +34,7 @@ function Content (){
             <button className="collection-button" onClick={showCollection}>Collection</button>
             <button className="search-button" onClick={showSearch}>Search</button>
         </nav>
-        <main>
+        <main className="main-background">
             {homeActive && <Home />}
             {collectionActive && <Collection />}
             {searchActive && <Search />}

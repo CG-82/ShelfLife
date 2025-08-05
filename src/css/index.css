@@ -76,10 +76,34 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 200px;
+    margin-top: 120px;
     padding: 10px;
-    
 }
+
+.main-background {
+  background-image: url('brooke-balentine-tR5lEkWTkg8-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 80vh;
+}
+
+.home {
+  margin-top:20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fffbe6;
+  box-shadow: 2px 2px 8px #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 
 
  h1 ,h2 {
@@ -96,7 +120,6 @@ footer {
     margin-top: auto;
     color: ivory;
     background-color: #432818ff;
-    border: 10px solid #99582aff;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -104,6 +127,7 @@ footer {
     z-index: 1000;
     box-sizing: border-box;
 }
+
 
 .search-results, .library-cards-container {
     display: grid;
@@ -113,7 +137,7 @@ footer {
     width: 100%;
     box-sizing: border-box;
     justify-content: center;
-}
+  }
 
 
 
@@ -149,7 +173,7 @@ footer {
 
 
 .add-library-btn ,.remove-library-btn, .summary-btn, .search-api-btn{
-    margin-top: 10px;
+    margin: 10px;
     background-color: #ffe6a7ff;
     border: none;
     padding: 8px 16px;
@@ -191,6 +215,7 @@ footer {
     justify-content: center;
     gap: 1rem;
     margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .pagination-controls button {
@@ -275,13 +300,14 @@ footer {
 
 
 
-@media (min-width: 768px) {
+@media (min-width: 950px) {
     .search-results, .library-cards-container {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         max-width: 1200px;
         margin: 0 auto;
     }
-}
+  }
+
 
 @media (max-width: 600px) {
   nav {
@@ -295,6 +321,7 @@ footer {
     padding: 6px 12px;
   }
 
+  
   .library-card, .search-card {
     padding: 20px;
     border: 2px solid #99582aff;
@@ -358,6 +385,11 @@ footer {
     nav {
         top: 220px;
     }
+
+    main {
+    margin-top: 200px;
+  }
+
 }
     
 
