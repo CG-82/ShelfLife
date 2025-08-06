@@ -4,7 +4,8 @@ function Footer () {
 
         <footer>
 
-        <a href="placeholder">About</a>
+        &copy; 2025 Shelf Life 
+        <a href="about.html">About</a>
         
 
         </footer>

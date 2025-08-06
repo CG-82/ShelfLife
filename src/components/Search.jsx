@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useLibrary } from '../context/LibraryContext';
 
+// Search component handles searching for books and adding them to the user's library
 function Search() {
+  // State for search input, results, loading, errors, pagination, and UI feedback
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,7 +13,7 @@ function Search() {
   const [searched, setSearched] = useState(false);
   const [addError, setAddError] = useState('');
 
-  //  Pull everything from LibraryContext
+  // Pull context values for library management and summaries
   const { 
     library, 
     addToLibrary,
@@ -21,7 +23,7 @@ function Search() {
     toggleSummary
   } = useLibrary();
 
-  // Reset state when a new search starts
+  // Reset state before a new search
   const resetSearchState = () => {
     setLoading(true);
     setError('');
@@ -29,7 +31,7 @@ function Search() {
     setSearched(true);
   };
 
-  // Fetch books from OpenLibrary
+  // Fetch books from OpenLibrary API
   const searchBooks = async (searchQuery = query, searchPage = page) => {
     if (!searchQuery.trim()) return;
 
@@ -44,6 +46,7 @@ function Search() {
 
       const data = await response.json();
 
+      // Map API results to book objects
       const books = data.docs.slice(0, 12).map(book => ({
         key: book.key,
         workKey: book.key.split('/').pop(),
@@ -55,6 +58,7 @@ function Search() {
       setResults(books);
       setTotalPages(Math.ceil(data.numFound / 100));
     } catch (err) {
+      // Handle and display errors
       const message = err instanceof Error ? err.message : 'Something went wrong.';
       console.error('Search error:', err);
       setError(message);
@@ -63,21 +67,25 @@ function Search() {
     }
   };
 
+  // Helper to get cover image URL or fallback
   const getCoverURL = (coverId) =>
     coverId
       ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
       : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
+  // Handler for search button or Enter key
   const handleSearch = useCallback(() => {
     setPage(1);
     searchBooks(query, 1);
   }, [query]);
 
+  // Handler for pagination controls
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage);
     searchBooks(query, newPage);
   }, [query]);
 
+  // Handler for adding a book to the library, with duplicate check
   const handleAddToLibrary = useCallback((book) => {
     setAddError('');
     const exists = library.some(b => b.key === book.key);
@@ -93,6 +101,7 @@ function Search() {
   return (
     <section aria-labelledby="search-heading">
       <h1 id="search-heading">Book Search</h1>
+      {/* Search form */}
       <form
         onSubmit={e => {
           e.preventDefault();
@@ -113,15 +122,19 @@ function Search() {
         </button>
       </form>
 
+      {/* Error messages for search and add-to-library */}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {addError && <p style={{ color: 'red' }}>{addError}</p>}
 
+      {/* Search results section */}
       <section aria-live="polite" aria-label="Search results">
         <div className="search-results">
+          {/* Show message if no results */}
           {searched && results.length === 0 && !loading && (
             <p>No books found. Try a different search term.</p>
           )}
 
+          {/* Render each search result as a card */}
           {searched && results.map(book => {
             const isInLibrary = library.some(b => b.key === book.key);
             const isOpen = openSummaries[book.workKey];
@@ -132,6 +145,7 @@ function Search() {
                 <div className='search-title'>{book.title}</div>
                 <div className='search-author'>by {book.author}</div>
                 
+                {/* Add to library button, disabled if already added */}
                 <button
                   className="add-library-btn"
                   onClick={() => handleAddToLibrary(book)}
@@ -140,6 +154,7 @@ function Search() {
                   {isInLibrary ? 'Added' : 'Add'}
                 </button>
 
+                {/* Show/Hide summary button */}
                 <button
                   className="summary-btn"
                   onClick={() => toggleSummary(book.workKey)}
@@ -152,6 +167,7 @@ function Search() {
                     : 'Show Summary'}
                 </button>
 
+                {/* Display summary if open */}
                 {isOpen && summaries[book.workKey] && (
                   <p className="summary-text">{summaries[book.workKey]}</p>
                 )}
@@ -161,6 +177,7 @@ function Search() {
         </div>
       </section>
 
+      {/* Pagination controls, shown only if there are results */}
       {searched && results.length > 0 && (
         <nav className="pagination-controls" aria-label="Pagination">
           <button

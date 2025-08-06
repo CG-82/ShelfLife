@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>About - Shelf Life</title>
+  <link rel="stylesheet" href="/css/index.css" />
+</head>
+<body>
+  
+    <header>
+      <h1>Shelf Life</h1>
+    </header>
+    
+    <nav></nav>
+    <main class="main-background">
+        <section class="about">
+            <h1>About Shelf Life</h1>
+            <p>
+              Shelf life was designed to help you manage your home library collection. The Search button helps you search for information
+              about books you own or are interested in, including brief summaries if available. Once you find a book you're interested in you can add it to your
+              personal library. Once your selection is there, you can use the Collection button to view the books you've selected at any time and update their status and rating.
+              The app will automatically update the charts with the changes set by the user. All information is stored in a React context API called LibraryContext, allowing
+              the information to be used by all components and saved to local storage. There is room for improvement, however, and this page details some changes I'm considering in the future.
+            </p>
+
+            <ul>
+                <li>Instead of using boolean statement on button clicks to change the displayed content, I'm considering moving to React Routes. This would mean all the contnt would have its own
+                    page and style would not change. It would decomplicate some code and possibly improve overall performance.
+                </li>
+                <li>I plan on adding more functionality to the collection page. These would include things like the ability to sort and filter your library according by title, author, rating, etc. </li>
+                <li>While using local storage has worked to prove my design concept and make it functional, it is not ideal. Having a longer lasting solution would be better if the app is actually deployed.
+                    It would also benefit from secure access so unauthorized users cannot access info about your library. To that end, I may employ express at some point to adddress these issues.
+                </li>
+
+            </ul>
+
+        </section>
+    </main>
+   
+    <footer>
+      &copy; 2025 Shelf Life 
+      <a href="index.html">Main</a>
+    </footer>
+</body>
+</html>

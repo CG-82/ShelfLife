@@ -5,12 +5,15 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+// Helper function to get book cover image or fallback
 const getCoverURL = (coverId) =>
   coverId
     ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
     : 'https://via.placeholder.com/128x193.png?text=No+Cover';
 
+// Main Collection component
 function Collection() {
+  // Pull library state and management functions from context
   const {
     library,
     removeFromLibrary,
@@ -22,17 +25,20 @@ function Collection() {
     summaryLoading
   } = useLibrary();
 
-  // Chart Data
+  // Calculate number of finished and unfinished books for chart
   const finishedCount = library.filter(b => b.status === 'finished').length;
   const unfinishedCount = library.length - finishedCount;
 
+  // Data for pie chart (finished vs unfinished)
   const statusData = [
     { name: 'Finished', value: finishedCount },
     { name: 'Unfinished', value: unfinishedCount }
   ];
 
+  // Colors for pie chart
   const COLORS = ['#4caf50', '#f44336']; // green & red
 
+  // Data for bar chart (books by rating)
   const ratingCounts = [1, 2, 3, 4, 5].map(rating => ({
     rating,
     count: library.filter(b => b.rating === rating).length,
@@ -42,10 +48,10 @@ function Collection() {
     <div className='library'>
       <h2>Library Status charts</h2>
 
-      {/* Library Charts */}
+      {/* Show charts only if there are books in the library */}
       {library.length > 0 && (
         <div className="library-stats">
-          {/* Pie Chart */}
+          {/* Pie Chart: Finished vs Unfinished */}
           <div className="library-chart">
             <h3>Books Finished vs Unfinished</h3>
             <PieChart width={300} height={300}>
@@ -68,10 +74,9 @@ function Collection() {
             </PieChart>
           </div>
 
-          {/* Bar Chart */}
+          {/* Bar Chart: Books by Rating */}
           <div className="library-chart">
             <h3>Books by Rating</h3>
-            
             <BarChart width={300} height={300} data={ratingCounts}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="rating" />
@@ -80,24 +85,27 @@ function Collection() {
               <Legend />
               <Bar dataKey="count" fill="#2196f3" />
             </BarChart>
-           
           </div>
         </div>
       )}
+
       <h2>Your Library</h2>
-      {/* Library Cards*/}
+      {/* Show message if library is empty, otherwise show cards */}
       {library.length === 0 ? (
         <p>Your library is empty.</p>
       ) : (
         <div className="library-cards-container">
+          {/* Render each book as a card */}
           {library.map(book => {
             const isOpen = openSummaries[book.workKey];
             return (
               <div className='library-card' key={book.key}>
+                {/* Book cover */}
                 <img
                   src={getCoverURL(book.coverId)}
                   alt={book.title}
                 />
+                {/* Book title and author */}
                 <div className="library-title">{book.title}</div>
                 <div className="library-author">by {book.author}</div>
 
@@ -140,11 +148,12 @@ function Collection() {
                     : 'Show Summary'}
                 </button>
 
+                {/* Book summary text, shown if open */}
                 {isOpen && summaries[book.workKey] && (
                   <p className="summary-text">{summaries[book.workKey]}</p>
                 )}
 
-                {/* Remove Button */}
+                {/* Remove book from library */}
                 <button
                   className="remove-library-btn"
                   onClick={() => removeFromLibrary(book.key)}
