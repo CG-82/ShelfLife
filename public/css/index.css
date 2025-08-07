@@ -105,8 +105,9 @@ main {
 
 
 footer {
-    flex-shrink: 0;
-    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     color: ivory;
     background-color: #432818ff;
     border: 5px solid #99582aff;
@@ -116,6 +117,17 @@ footer {
     width: 100%;
     z-index: 1000;
     box-sizing: border-box;
+    padding: 0 1.5rem;
+}
+
+footer a {
+    margin-left: auto;
+    color: #fff;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }
 
 
